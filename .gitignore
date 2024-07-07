@@ -163,3 +163,11 @@ cython_debug/
 
 # vscode
 .vscode/
+
+# logfiles
+*.log
+logs/
+record/
+
+# Subject data
+subject_data/
