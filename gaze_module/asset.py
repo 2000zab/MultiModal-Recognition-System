@@ -157,6 +157,61 @@ class HeadPoseNormalizer:
         ], dtype=np.float64)
 
 
+# class GazeEstimator:
+#     def __init__(self, checkpoint_path: str, 
+#                  camera_params: str, normalized_camera_params: str, 
+#                  normalized_camera_eye_params:str,
+#                  model_name: str = "resnet18",
+#                  normalized_distance: float = 0.6, device: str = None):  # 设置归一化的距离为0.6米，即设置归一化的图像为面部到摄像头的距离为0.6米
+#         camera = Camera(camera_params)  # 实时的相机内参矩阵
+#         normalized_camera = Camera(normalized_camera_params)  # ETH-XGaze归一化的相机内参矩阵，用于面部
+#         normalized_camera_eye = Camera(normalized_camera_eye_params)  # eye_normalized的虚拟相机内参矩阵  111
+#         self.camera = camera
+#         self.normalized_camera = normalized_camera
+#         self.normalized_camera_eye = normalized_camera_eye  # 111
+#         self.face_model_3d = FaceModelMediaPipe()
+#         self.head_pose_normalizer = HeadPoseNormalizer(camera, normalized_camera, normalized_camera_eye,
+#                                                        normalized_distance=normalized_distance)  # normalized_distance参考MPIIGaze论文为0.6m
+        
+#         self.device = device
+#         if self.device is None:
+#             self.device = "cuda" if torch.cuda.is_available() else "cpu"
+#             self.gaze_estimation_model = timm.create_model(model_name, num_classes=2)
+#             try:
+#                 assert os.path.isfile(checkpoint_path), f"checkpoint file not found: {checkpoint_path}"
+                
+#                 print("Starting loading！！！！")
+
+#                 #自己训练模型的pth加载
+#                 checkpoint = torch.load(checkpoint_path,map_location = self.device)
+#                 self.gaze_estimation_model.load_state_dict(checkpoint)
+#                 print("model successfully loaded.")
+#             except:
+#                 print("model loading failed.")
+#             self.gaze_estimation_model.to(device)
+#             self.gaze_estimation_model.eval()
+#         elif self.device == 'npu':
+#             self.session = requests.session()
+            
+#     def estimate(self, face, frame):
+#         self.face_model_3d.estimate_head_pose(face,
+#                                               self.camera)
+#         self.face_model_3d.compute_3d_pose(face)
+#         self.face_model_3d.compute_face_eye_centers(face, 'ETH-XGaze')
+#         self.head_pose_normalizer.normalize(frame, face)
+        
+#         if self.device == 'npu':
+#             face.normalized_gaze_angles = self.estimateByAtlas200DK(face)
+#         else:
+#             image = transform(face.normalized_image).unsqueeze(0)
+#             image = image.to(self.device)
+            
+#             prediction = self.gaze_estimation_model(image)
+#             prediction = prediction.detach().cpu().numpy()
+#             face.normalized_gaze_angles = prediction[0]
+#         face.angle_to_vector()
+#         face.denormalize_gaze_vector()
+        
 class GazeEstimator:
     def __init__(self, checkpoint_path: str, 
                  camera_params: str, normalized_camera_params: str, 
@@ -172,44 +227,33 @@ class GazeEstimator:
         self.face_model_3d = FaceModelMediaPipe()
         self.head_pose_normalizer = HeadPoseNormalizer(camera, normalized_camera, normalized_camera_eye,
                                                        normalized_distance=normalized_distance)  # normalized_distance参考MPIIGaze论文为0.6m
-        
-        self.device = device
-        if self.device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
-            self.gaze_estimation_model = timm.create_model(model_name, num_classes=2)
-            try:
-                assert os.path.isfile(checkpoint_path), f"checkpoint file not found: {checkpoint_path}"
-                
-                print("Starting loading！！！！")
+        self.session = requests.session()
 
-                #自己训练模型的pth加载
-                checkpoint = torch.load(checkpoint_path,map_location = self.device)
-                self.gaze_estimation_model.load_state_dict(checkpoint)
-                print("model successfully loaded.")
-            except:
-                print("model loading failed.")
-            self.gaze_estimation_model.to(device)
-            self.gaze_estimation_model.eval()
-        elif self.device == 'npu':
-            self.session = requests.session()
-            
+    def gazeByAtlas200DK(self,face):
+        atlas_url = "http://192.168.2.100:8000/inferenceByom/"
+        # atlas_url = "http://10.70.98.165:8000/register/"
+
+        _, encoded_image = cv2.imencode(".jpg", face.normalized_image)  # 对图像进行编码
+        byte_image = encoded_image.tobytes()  # 将数组转为bytes流
+        data = {"face": byte_image}
+
+        response = self.session.post(atlas_url, files=data)  # 发送Post请求，将图像发送给后端 进行推理
+        predict_gaze = response.text.split(" ")
+        predict_gaze = np.array([float(predict_gaze[0]), float(predict_gaze[1])])
+        # print(predict_gaze)
+        return predict_gaze
+
     def estimate(self, face, frame):
         self.face_model_3d.estimate_head_pose(face,
                                               self.camera)
         self.face_model_3d.compute_3d_pose(face)
         self.face_model_3d.compute_face_eye_centers(face, 'ETH-XGaze')
         self.head_pose_normalizer.normalize(frame, face)
-        
-        if self.device == 'npu':
-            face.normalized_gaze_angles = self.estimateByAtlas200DK(face)
-        else:
-            image = transform(face.normalized_image).unsqueeze(0)
-            image = image.to(self.device)
-            
-            prediction = self.gaze_estimation_model(image)
-            prediction = prediction.detach().cpu().numpy()
-            face.normalized_gaze_angles = prediction[0]
+
+        face.normalized_gaze_angles = self.gazeByAtlas200DK(face)   # 在Atlas200DK上运行
+
         face.angle_to_vector()
+
         face.denormalize_gaze_vector()
 
 def gaze2point(center, gaze_vector):

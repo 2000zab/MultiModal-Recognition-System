@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 import cv2
 import mediapipe as mp
-from .asset import detect_faces_mediapipe, GazeEstimator, gaze2point, mm2px
+from gaze_module.asset import detect_faces_mediapipe, GazeEstimator, gaze2point, mm2px
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 import socket
 import json
@@ -39,11 +39,13 @@ def estimate_gaze():
         min_detection_confidence=0.5, 
         min_tracking_confidence=0.5
     )
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    pos_tag = 0
     # recv_flag常开，保持数据采集
     while True:
         # 拍摄一张图片
         ret, frame = cap.read()
+        local_ts = time.time()
         # 如果没有拍摄到图片，或者不需要上传数据，则重拍
         if not ret:
             continue
@@ -68,7 +70,8 @@ def estimate_gaze():
                 pitch, yaw, roll
             ]
             features.append(feat)
-        yield features
+        
+        yield features, local_ts
 
 if __name__ == '__main__':
     # 开放端口
