@@ -218,6 +218,8 @@ class ReceiverGaze(Process):
         self.block_data.clear()
         self.triggers.clear()
         self.sample_timests.clear()
+        self.cali_data = [0, 0]
+        self.cali_tmp = []
         # 然后开启存储功能
         self.save_flag = True
         self.logger.debug("Session Start!")

@@ -33,7 +33,7 @@ def init_logger(who, log_level=logging.INFO):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     # 给logger添加handler
-    # logger.addHandler(handler)
+    logger.addHandler(handler)
     # 创建一个控制台输出handler
     console = logging.StreamHandler(sys.stdout)
     console.setLevel(log_level)

@@ -12,6 +12,11 @@ GazeReceiver_Configs.network_config.DATA_PORT = 20020
 GazeReceiver_Configs.network_config.TRIGGER_IP = '127.0.0.1'
 GazeReceiver_Configs.network_config.TRIGGER_PORT = 12346
 
+LiteFeedback_Configs = edict()
+LiteFeedback_Configs.network_config = edict()
+LiteFeedback_Configs.network_config.IP = '127.0.0.1'
+LiteFeedback_Configs.network_config.PORT = 12347
+
 LiveAmp = edict()
 LiveAmp.identifier = 'LiveAmp'
 LiveAmp.sfreq = 500

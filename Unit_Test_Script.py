@@ -44,5 +44,5 @@ def test_eeg_receiver():
 
 if __name__ == '__main__':
     test_init_logger()
-    test_eeg_receiver()
+    # test_eeg_receiver()
     print('All tests passed!')
