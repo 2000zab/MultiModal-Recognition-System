@@ -49,3 +49,33 @@ GazeCamera.identifier = 'logi Camera'
 GazeCamera.Description = '''
 Logitech BRIO 500 webcam
 '''
+
+global_config = edict()
+# 文件路径配置
+global_config.data_dir = "subject_data"             # 数据存放路径
+global_config.model_dir = "models"          # 模型存放路径
+global_config.exp_dir = "records"           # 实验记录存放路径
+global_config.log_dir = "logs"              # 日志存放路径
+global_config.cali_data_path = "records/last_cali_data.pkl"
+# trigger设置
+global_config.triggers = {                  # trigger设置
+    'blink': 150,                               # 眨眼
+    'eyeball_ud': 151,                          # 眼球上下移动
+    'eyeball_lr': 152,                          # 眼球左右移动
+    'head_move': 153,                           # 头部移动
+    'jaw_clench': 154,                          # 咬牙
+    'rest_state': 155,                          # 静息状态
+    'left_hand': 200,                           # 左手
+    'right_hand': 201,                          # 右手
+    'no_move': 202,                             # 保持不动
+    'both_hand': 203,                           # 双手
+    'feet': 204,                                # 双脚
+}
+global_config.unity_cmd = {                 # unity控制命令
+    'LEFT',
+    'RIGHT',
+}
+# 反馈设置
+global_config.predict_time = 6.8             # 预测时间
+global_config.cut_time = 2                   # 截取时间
+global_config.max_blocks = 5                 # 反馈控制最大次数

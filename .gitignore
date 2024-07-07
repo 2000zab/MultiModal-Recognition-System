@@ -167,6 +167,7 @@ cython_debug/
 # logfiles
 *.log
 logs/
+record/
 
 # Subject data
 subject_data/
